@@ -1,8 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
-
+const dotenv = require("dotenv");
 const booksRoutes = require("./routes/routes_books");
 const usersRoutes = require("./routes/routes_users");
+
+dotenv.config();
 
 mongoose
   .connect(
