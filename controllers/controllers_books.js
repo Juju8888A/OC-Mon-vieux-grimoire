@@ -1,6 +1,7 @@
 const Book = require("../models/Book");
 const fs = require("fs");
 
+// création d'un livre par l'utilisateur
 exports.createBook = (req, res, next) => {
   const bookObject = JSON.parse(req.body.book);
   delete bookObject._id;
@@ -23,6 +24,7 @@ exports.createBook = (req, res, next) => {
     });
 };
 
+// mise à jour d'un livre
 exports.modifyBook = (req, res, next) => {
   const bookObject = req.file
     ? {
@@ -52,6 +54,7 @@ exports.modifyBook = (req, res, next) => {
     });
 };
 
+// suppression d'un livre
 exports.deleteBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
@@ -69,14 +72,91 @@ exports.deleteBook = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
+// afficher tous les livres
 exports.getOneBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => res.status(200).json(book))
     .catch((error) => res.status(404).json({ error }));
 };
 
+// afficher un livre
 exports.getAllBooks = (req, res, next) => {
   Book.find()
     .then((books) => res.status(200).json(books))
     .catch((error) => res.status(400).json({ error }));
+};
+
+// noter un livre
+
+exports.ratingABook = (req, res, next) => {
+  const { userId, rating } = req.body;
+
+  const user = req.body.userId;
+
+  if (user !== req.auth.userId) {
+    return res.status(401).json({ message: "Non autorisé" });
+  }
+
+  //  je vérifie que le livre est bien noté entre 0 et 5 étoiles
+  if (rating < 0 || rating > 5) {
+    return res
+      .status(400)
+      .json({ error: "Le livre doit être noté entre 0 et 5 étoiles." });
+  }
+
+  Book.findById(req.params.id)
+    .then((book) => {
+      if (!book) {
+        return res.status(404).json({ error: "Livre non trouvé." });
+      }
+
+      // je vérifie si un utilisateur a déjà noté un livre ou non
+      const userRating = book.ratings.find(
+        (rating) => rating.userId === userId
+      );
+
+      if (userRating) {
+        return res
+          .status(400)
+          .json({ error: "L'utilisateur a déjà noté ce livre." });
+      }
+
+      // j'ajoute la nouvelle note dans les données existantes
+      book.ratings.push({ userId, grade: rating });
+
+      // je calcule le nouveau score
+      const totalRatings = book.ratings.length;
+      const sumRatings = book.ratings.reduce(
+        (sum, rating) => sum + rating.grade,
+        0
+      );
+      const averageRating = sumRatings / totalRatings;
+      book.averageRating = averageRating;
+
+      // je sauvegarde les changements
+      book
+        .save()
+        .then((updatedBook) => {
+          res.status(200).json(updatedBook);
+        })
+        .catch((error) => {
+          res.status(500).json({ error });
+        });
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
+};
+
+// afficher le top 3 du classement des meilleurs livres notés
+exports.getBestRatings = (req, res, next) => {
+  Book.find()
+    .sort({ averageRating: -1 })
+    .limit(3) // affiche 3 livres
+    .then((books) => {
+      res.status(200).json(books);
+    })
+    .catch((error) => {
+      res.status(500).json({ error: error.message || error });
+    });
 };
