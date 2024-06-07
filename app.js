@@ -4,9 +4,17 @@ const booksRoutes = require("./routes/routes_books");
 const usersRoutes = require("./routes/routes_users");
 const path = require("path");
 
+require("dotenv").config();
+
 mongoose
   .connect(
-    "mongodb+srv://jourdanjuliette:5wj9PM8raElQTT0I@clustermonvieuxgrimoire.sssnb3r.mongodb.net/?retryWrites=true&w=majority&appName=ClusterMonVieuxGrimoire",
+    "mongodb+srv://" +
+      process.env.USER +
+      ":" +
+      process.env.PASSWORD +
+      "@" +
+      process.env.CLUSTER +
+      ".mongodb.net/?retryWrites=true&w=majority&appName=ClusterMonVieuxGrimoire",
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(() => console.log("Connexion à MongoDB réussie !"))

@@ -36,11 +36,25 @@ exports.modifyBook = (req, res, next) => {
     : { ...req.body };
 
   delete bookObject._userId;
+
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
         res.status(401).json({ message: "Non-autorisé!" });
       } else {
+        // si une nouvelle image est téléchargée à la place de l'ancienne, je supprime l'ancienne image de la base de données
+        if (req.file) {
+          const oldFilename = book.imageUrl.split("/images/")[1];
+          fs.unlink(`images/${oldFilename}`, (err) => {
+            if (err)
+              console.error(
+                "Erreur lors de la suppression de l'ancienne image:",
+                err
+              );
+          });
+        }
+
+        // Mettez à jour le livre avec les nouvelles données
         Book.updateOne(
           { _id: req.params.id },
           { ...bookObject, _id: req.params.id }
