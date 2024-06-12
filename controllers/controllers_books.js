@@ -54,7 +54,7 @@ exports.modifyBook = (req, res, next) => {
           });
         }
 
-        // Mettez à jour le livre avec les nouvelles données
+        // Mise à jour du livre avec les nouvelles données
         Book.updateOne(
           { _id: req.params.id },
           { ...bookObject, _id: req.params.id }
@@ -86,14 +86,14 @@ exports.deleteBook = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
-// afficher tous les livres
+// afficher un livre
 exports.getOneBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => res.status(200).json(book))
     .catch((error) => res.status(404).json({ error }));
 };
 
-// afficher un livre
+// afficher tous les livres
 exports.getAllBooks = (req, res, next) => {
   Book.find()
     .then((books) => res.status(200).json(books))
@@ -101,7 +101,6 @@ exports.getAllBooks = (req, res, next) => {
 };
 
 // noter un livre
-
 exports.ratingABook = (req, res, next) => {
   const { userId, rating } = req.body;
 
